@@ -6,7 +6,8 @@
 /out
 
 # local environment files
-.env*.local
+.env*
+!.env.example
 
 # macOS
 .DS_Store
