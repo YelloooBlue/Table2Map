@@ -45,15 +45,17 @@ function number(value: unknown): number | null {
 function location(value: unknown) {
   if (!value || typeof value !== "object") return null;
   const entry = value as Record<string, unknown>;
-  const longitude = number(entry.longitude ?? entry.lng);
-  const latitude = number(entry.latitude ?? entry.lat);
+  const coordinateString = text(entry.location);
+  const [locationLongitude, locationLatitude] = coordinateString?.split(",").map((item) => Number(item.trim())) ?? [];
+  const longitude = number(entry.longitude ?? entry.lng) ?? (Number.isFinite(locationLongitude) ? locationLongitude : null);
+  const latitude = number(entry.latitude ?? entry.lat) ?? (Number.isFinite(locationLatitude) ? locationLatitude : null);
   if (longitude === null || latitude === null) return null;
   return {
     longitude,
     latitude,
-    name: text(entry.name ?? entry.address ?? entry.full_address) ?? "未命名地点",
-    province: text(entry.province),
-    city: text(entry.city),
+    name: text(entry.name ?? entry.address ?? entry.full_address ?? entry.pname) ?? "未命名地点",
+    province: text(entry.province ?? entry.pname),
+    city: text(entry.city ?? entry.cityname ?? entry.cname),
     district: text(entry.district ?? entry.adname),
   };
 }
