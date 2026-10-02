@@ -125,7 +125,7 @@ function ImageViewer({
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-full w-full max-w-4xl flex-col gap-3"
+        className="relative flex h-full w-full max-w-4xl flex-col gap-3"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -135,7 +135,7 @@ function ImageViewer({
         >
           ×
         </button>
-        <div className="relative min-h-[50dvh] overflow-hidden rounded-lg bg-black">
+        <div className="relative h-[70vh] max-h-[calc(100vh-7rem)] overflow-hidden rounded-lg bg-black sm:h-[75vh]">
           <Image
             src={poiImageUrl(image.token)}
             alt={image.name ?? "地点图片"}
@@ -173,6 +173,31 @@ function ImageViewer({
             </>
           )}
         </div>
+        {gallery.images.length > 1 && (
+          <div
+            className="flex gap-2 overflow-x-auto pb-1"
+            aria-label="切换图片"
+          >
+            {gallery.images.map((thumbnail, index) => (
+              <button
+                key={thumbnail.token}
+                aria-label={`查看图片 ${index + 1}`}
+                aria-pressed={index === gallery.activeIndex}
+                onClick={() => onSelectImage(index)}
+                className={`relative size-12 shrink-0 overflow-hidden rounded-md border-2 ${index === gallery.activeIndex ? "border-white" : "border-transparent opacity-60"}`}
+              >
+                <Image
+                  src={poiImageUrl(thumbnail.token)}
+                  alt=""
+                  fill
+                  sizes="48px"
+                  unoptimized
+                  className="object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -267,6 +292,7 @@ export function PoiExplorer({ pois, mapKey, initialSelectedId }: Props) {
                 ⌕
               </span>
               <input
+                suppressHydrationWarning
                 aria-label="搜索地点"
                 className="h-10 w-full rounded-lg border border-[#d0d5dd] bg-[#f9fafb] py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-[#98a2b3] focus:border-[#84adff] focus:bg-white focus:ring-4 focus:ring-[#eff4ff]"
                 placeholder="搜索名称…"
@@ -339,6 +365,7 @@ export function PoiExplorer({ pois, mapKey, initialSelectedId }: Props) {
                   ⌕
                 </span>
                 <input
+                  suppressHydrationWarning
                   aria-label="搜索地点"
                   className="h-10 w-full rounded-lg border border-[#d0d5dd] bg-[#f9fafb] py-2 pl-9 pr-3 text-sm outline-none placeholder:text-[#98a2b3] focus:border-[#84adff] focus:ring-4 focus:ring-[#eff4ff]"
                   placeholder="搜索地点…"

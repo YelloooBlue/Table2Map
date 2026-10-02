@@ -134,8 +134,11 @@ export default function PoiMap({
 
   useEffect(() => {
     if (!map.current || !markers.current) return;
+    const currentMap = map.current;
+    const markerLayer = markers.current;
     void import("leaflet").then((L) => {
-      markers.current?.clearLayers();
+      if (map.current !== currentMap || markers.current !== markerLayer) return;
+      markerLayer.clearLayers();
       markerById.current.clear();
       const bounds: [number, number][] = [];
       pois.forEach((poi) => {
@@ -156,12 +159,12 @@ export default function PoiMap({
             offset: [0, -4],
           })
           .on("click", () => onSelect(poi.id))
-          .addTo(markers.current!);
+          .addTo(markerLayer);
         markerById.current.set(poi.id, marker);
       });
-      if (bounds.length === 1) map.current?.setView(bounds[0], 13);
+      if (bounds.length === 1) currentMap.setView(bounds[0], 13);
       if (bounds.length > 1)
-        map.current?.fitBounds(bounds, { padding: [28, 28], maxZoom: 13 });
+        currentMap.fitBounds(bounds, { padding: [28, 28], maxZoom: 13 });
     });
   }, [mapReady, onPreviewImages, onSelect, pois]);
 
