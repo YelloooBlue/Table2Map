@@ -72,12 +72,35 @@ body {
   line-height: 1.4;
 }
 
-.poi-map-popup__image {
-  display: block;
+.poi-map-popup__gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.poi-map-popup__gallery--single {
+  grid-template-columns: 1fr;
+}
+
+.poi-map-popup__gallery-item {
+  height: 52px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 6px;
+  padding: 0;
+  background: #f2f4f7;
+  cursor: zoom-in;
+}
+
+.poi-map-popup__gallery--single .poi-map-popup__gallery-item {
   height: 92px;
+}
+
+.poi-map-popup__gallery-item img {
+  display: block;
+  height: 100%;
   width: 100%;
-  margin: -1px 0 8px;
-  border-radius: 7px;
   object-fit: cover;
 }
 
@@ -128,12 +151,4 @@ body {
   color: #b54708;
   font-size: 12px;
   font-weight: 700;
-}
-
-.poi-map-popup__footer {
-  margin: 8px 0 0;
-  border-top: 1px solid #eaecf0;
-  padding-top: 6px;
-  color: #98a2b3;
-  font-size: 11px;
 }

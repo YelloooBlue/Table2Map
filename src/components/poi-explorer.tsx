@@ -3,11 +3,12 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
-import type { Poi } from "@/lib/poi";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Poi, PoiImage } from "@/lib/poi";
 
 const PoiMap = dynamic(() => import("@/components/poi-map"), { ssr: false });
 type Props = { pois: Poi[]; mapKey?: string; initialSelectedId?: string };
+type GalleryState = { images: PoiImage[]; activeIndex: number };
 
 function uniqueOptions(values: Array<string | null>) {
   return [
@@ -92,6 +93,91 @@ function PoiCard({
   );
 }
 
+function ImageViewer({
+  gallery,
+  onClose,
+  onSelectImage,
+}: {
+  gallery: GalleryState;
+  onClose: () => void;
+  onSelectImage: (activeIndex: number) => void;
+}) {
+  const image = gallery.images[gallery.activeIndex];
+  const showImage = (activeIndex: number) =>
+    gallery.images.length &&
+    activeIndex >= 0 &&
+    activeIndex < gallery.images.length;
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="图片预览"
+      className="fixed inset-0 z-[2000] flex items-center justify-center bg-[#101828]/90 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative flex max-h-full w-full max-w-4xl flex-col gap-3"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          aria-label="关闭图片预览"
+          onClick={onClose}
+          className="absolute -right-1 -top-10 size-8 rounded-full bg-white/15 text-lg text-white backdrop-blur hover:bg-white/25"
+        >
+          ×
+        </button>
+        <div className="relative min-h-[50dvh] overflow-hidden rounded-lg bg-black">
+          <Image
+            src={poiImageUrl(image.token)}
+            alt={image.name ?? "地点图片"}
+            fill
+            sizes="(max-width: 768px) 100vw, 900px"
+            unoptimized
+            className="object-contain"
+          />
+          {gallery.images.length > 1 && (
+            <>
+              <button
+                aria-label="上一张图片"
+                disabled={!showImage(gallery.activeIndex - 1)}
+                onClick={() => {
+                  if (showImage(gallery.activeIndex - 1)) {
+                    onSelectImage(gallery.activeIndex - 1);
+                  }
+                }}
+                className="absolute left-3 top-1/2 size-9 -translate-y-1/2 rounded-full bg-black/45 text-lg text-white disabled:opacity-30"
+              >
+                ‹
+              </button>
+              <button
+                aria-label="下一张图片"
+                disabled={!showImage(gallery.activeIndex + 1)}
+                onClick={() => {
+                  if (showImage(gallery.activeIndex + 1)) {
+                    onSelectImage(gallery.activeIndex + 1);
+                  }
+                }}
+                className="absolute right-3 top-1/2 size-9 -translate-y-1/2 rounded-full bg-black/45 text-lg text-white disabled:opacity-30"
+              >
+                ›
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function PoiExplorer({ pois, mapKey, initialSelectedId }: Props) {
   const [query, setQuery] = useState("");
   const [type, setType] = useState("");
@@ -99,10 +185,16 @@ export function PoiExplorer({ pois, mapKey, initialSelectedId }: Props) {
   const [selectedId, setSelectedId] = useState<string | undefined>(
     initialSelectedId,
   );
+  const [gallery, setGallery] = useState<GalleryState>();
   const selectPoi = useCallback((id: string) => {
     setSelectedId(id);
     window.history.replaceState(null, "", `/?poi=${encodeURIComponent(id)}`);
   }, []);
+  const openGallery = useCallback(
+    (images: PoiImage[], activeIndex: number) =>
+      setGallery({ images, activeIndex }),
+    [],
+  );
   const typeOptions = useMemo(
     () => uniqueOptions(pois.map((poi) => poi.type)),
     [pois],
@@ -304,6 +396,7 @@ export function PoiExplorer({ pois, mapKey, initialSelectedId }: Props) {
             mapKey={mapKey}
             selectedId={selectedId}
             onSelect={selectPoi}
+            onPreviewImages={openGallery}
           />
           <div className="pointer-events-none absolute left-3 top-3 hidden rounded-lg border border-white/80 bg-white/90 px-2.5 py-1.5 shadow-sm backdrop-blur lg:block">
             <p className="text-xs font-medium text-[#667085]">正在查看</p>
@@ -314,6 +407,17 @@ export function PoiExplorer({ pois, mapKey, initialSelectedId }: Props) {
           </div>
         </section>
       </div>
+      {gallery && (
+        <ImageViewer
+          gallery={gallery}
+          onClose={() => setGallery(undefined)}
+          onSelectImage={(activeIndex) =>
+            setGallery((current) =>
+              current ? { ...current, activeIndex } : current,
+            )
+          }
+        />
+      )}
     </main>
   );
 }

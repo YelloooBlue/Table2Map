@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gcj02ToWgs84 } from "@/lib/coordinates";
-import type { Poi } from "@/lib/poi";
+import type { Poi, PoiImage } from "@/lib/poi";
 
 type Props = {
   pois: Poi[];
   mapKey?: string;
   selectedId?: string;
   onSelect: (id: string) => void;
+  onPreviewImages: (images: PoiImage[], activeIndex: number) => void;
 };
 
 const tiandituVectorUrl =
@@ -18,15 +19,33 @@ function poiImageUrl(token: string) {
   return `/api/poi-image?token=${encodeURIComponent(token)}`;
 }
 
-function popupContent(poi: Poi) {
+function popupContent(
+  poi: Poi,
+  onPreviewImages: (images: PoiImage[], activeIndex: number) => void,
+) {
   const content = document.createElement("article");
   content.className = "poi-map-popup";
-  if (poi.images[0]) {
-    const image = document.createElement("img");
-    image.className = "poi-map-popup__image";
-    image.src = poiImageUrl(poi.images[0].token);
-    image.alt = "";
-    content.append(image);
+  if (poi.images.length) {
+    const gallery = document.createElement("div");
+    gallery.className = `poi-map-popup__gallery${poi.images.length === 1 ? " poi-map-popup__gallery--single" : ""}`;
+    poi.images.forEach((poiImage, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "poi-map-popup__gallery-item";
+      button.setAttribute("aria-label", `查看图片 ${index + 1}`);
+      button.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onPreviewImages(poi.images, index);
+      };
+      const image = document.createElement("img");
+      image.src = poiImageUrl(poiImage.token);
+      image.alt = "";
+      image.loading = "lazy";
+      button.append(image);
+      gallery.append(button);
+    });
+    content.append(gallery);
   }
   const header = document.createElement("div");
   header.className = "poi-map-popup__header";
@@ -65,16 +84,16 @@ function popupContent(poi: Poi) {
     review.textContent = poi.review;
     content.append(review);
   }
-  if (poi.images.length) {
-    const footer = document.createElement("p");
-    footer.className = "poi-map-popup__footer";
-    footer.textContent = `已收录 ${poi.images.length} 张图片`;
-    content.append(footer);
-  }
   return content;
 }
 
-export default function PoiMap({ pois, mapKey, selectedId, onSelect }: Props) {
+export default function PoiMap({
+  pois,
+  mapKey,
+  selectedId,
+  onSelect,
+  onPreviewImages,
+}: Props) {
   const element = useRef<HTMLDivElement>(null);
   const map = useRef<import("leaflet").Map | null>(null);
   const markers = useRef<import("leaflet").LayerGroup | null>(null);
@@ -131,7 +150,7 @@ export default function PoiMap({ pois, mapKey, selectedId, onSelect }: Props) {
           weight: 2,
         });
         marker
-          .bindPopup(popupContent(poi), {
+          .bindPopup(popupContent(poi, onPreviewImages), {
             autoPanPadding: [36, 36],
             closeButton: false,
             offset: [0, -4],
@@ -144,7 +163,7 @@ export default function PoiMap({ pois, mapKey, selectedId, onSelect }: Props) {
       if (bounds.length > 1)
         map.current?.fitBounds(bounds, { padding: [28, 28], maxZoom: 13 });
     });
-  }, [mapReady, onSelect, pois]);
+  }, [mapReady, onPreviewImages, onSelect, pois]);
 
   useEffect(() => {
     markerById.current.forEach((marker, id) => {
