@@ -2,9 +2,18 @@ import { getPublishedPois } from "@/lib/feishu";
 import { isConfigured } from "@/lib/poi";
 import { PoiExplorer } from "@/components/poi-explorer";
 
-export default async function HomePage() {
+type Props = {
+  searchParams: Promise<{ poi?: string | string[] }>;
+};
+
+export default async function HomePage({ searchParams }: Props) {
   const configured = isConfigured();
   const pois = configured ? await getPublishedPois() : [];
+  const poiParam = (await searchParams).poi;
+  const initialSelectedId =
+    typeof poiParam === "string" && pois.some((poi) => poi.id === poiParam)
+      ? poiParam
+      : undefined;
   if (!configured)
     return (
       <main className="mx-auto flex min-h-dvh max-w-6xl items-center px-6 py-16">
@@ -23,6 +32,7 @@ export default async function HomePage() {
     <PoiExplorer
       pois={pois}
       mapKey={process.env.NEXT_PUBLIC_TIANDITU_TILE_KEY}
+      initialSelectedId={initialSelectedId}
     />
   );
 }

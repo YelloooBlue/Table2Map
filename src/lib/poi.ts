@@ -9,7 +9,12 @@ export type Poi = {
   district: string | null;
   latitude: number;
   longitude: number;
-  imageCount: number;
+  images: PoiImage[];
+};
+
+export type PoiImage = {
+  token: string;
+  name: string | null;
 };
 
 export const poiFields = {

@@ -16,3 +16,124 @@ body {
   color: var(--foreground);
   font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
+
+.poi-layout-map {
+  height: 46vh;
+}
+
+.poi-layout-list {
+  min-height: 0;
+}
+
+@supports (height: 1dvh) {
+  .poi-layout-map {
+    height: 46dvh;
+  }
+}
+
+@media (min-width: 1024px) {
+  .poi-layout-map,
+  .poi-layout-list {
+    height: calc(100vh - 80px);
+  }
+
+  @supports (height: 1dvh) {
+    .poi-layout-map,
+    .poi-layout-list {
+      height: calc(100dvh - 80px);
+    }
+  }
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgb(16 24 40 / 18%);
+}
+
+.leaflet-popup-content {
+  margin: 9px 11px;
+  min-width: 180px;
+  max-width: 240px;
+}
+
+.poi-map-popup__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.poi-map-popup h2 {
+  min-width: 0;
+  margin: 0;
+  color: #101828;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.poi-map-popup__image {
+  display: block;
+  height: 92px;
+  width: 100%;
+  margin: -1px 0 8px;
+  border-radius: 7px;
+  object-fit: cover;
+}
+
+.poi-map-popup__badges {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.poi-map-popup__meta {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.poi-map-popup__review {
+  margin: 4px 0 0;
+  border-left: 2px solid #84adff;
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.45;
+  padding-left: 8px;
+}
+
+.poi-map-popup__review-label {
+  margin: 8px 0 0;
+  color: #175cd3;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.poi-map-popup__type {
+  display: inline-block;
+  border-radius: 999px;
+  background: #eff4ff;
+  color: #175cd3;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  padding: 0 6px;
+}
+
+.poi-map-popup__rating {
+  display: inline-block;
+  color: #b54708;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.poi-map-popup__footer {
+  margin: 8px 0 0;
+  border-top: 1px solid #eaecf0;
+  padding-top: 6px;
+  color: #98a2b3;
+  font-size: 11px;
+}

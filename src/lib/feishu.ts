@@ -17,7 +17,7 @@ type RecordsResponse = {
 
 const baseUrl = "https://open.feishu.cn/open-apis";
 
-async function getTenantAccessToken() {
+export async function getTenantAccessToken() {
   const response = await fetch(
     `${baseUrl}/auth/v3/tenant_access_token/internal`,
     {
@@ -55,6 +55,48 @@ function text(value: unknown): string | null {
   return null;
 }
 
+function reviewText(value: unknown): string | null {
+  const direct = text(value);
+  if (direct) return direct;
+  if (!value || typeof value !== "object") return null;
+
+  const object = value as Record<string, unknown>;
+  const preferredKeys = [
+    "comment",
+    "content",
+    "description",
+    "title",
+    "summary",
+    "remark",
+  ];
+  for (const key of preferredKeys) {
+    const candidate = reviewText(object[key]);
+    if (candidate) return candidate;
+  }
+
+  for (const key of ["data", "object_value", "fields", "value"]) {
+    const nested = object[key];
+    if (nested && nested !== value) {
+      const candidate = reviewText(nested);
+      if (candidate) return candidate;
+    }
+  }
+  return null;
+}
+
+function images(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const attachment = item as Record<string, unknown>;
+    const token = text(attachment.file_token ?? attachment.fileToken);
+    if (!token) return [];
+    const mimeType = text(attachment.type ?? attachment.mime_type);
+    if (mimeType && !mimeType.startsWith("image/")) return [];
+    return [{ token, name: text(attachment.name) }];
+  });
+}
+
 function number(value: unknown): number | null {
   const stringValue = typeof value === "number" ? String(value) : text(value);
   if (stringValue === null) return null;
@@ -90,19 +132,18 @@ function location(value: unknown) {
 function toPoi(record: FeishuRecord): Poi | null {
   const place = location(record.fields[poiFields.location]);
   if (!place || text(record.fields[poiFields.status]) !== "已发布") return null;
-  const images = record.fields[poiFields.images];
   return {
     id: record.record_id,
     name: place.name,
     type: text(record.fields[poiFields.type]),
     rating: number(record.fields[poiFields.rating]),
-    review: text(record.fields[poiFields.review]),
+    review: reviewText(record.fields[poiFields.review]),
     province: place.province,
     city: place.city,
     district: place.district,
     latitude: place.latitude,
     longitude: place.longitude,
-    imageCount: Array.isArray(images) ? images.length : 0,
+    images: images(record.fields[poiFields.images]),
   };
 }
 

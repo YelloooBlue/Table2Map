@@ -14,15 +14,79 @@ type Props = {
 const tiandituVectorUrl =
   "https://t{s}.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk={key}";
 
+function poiImageUrl(token: string) {
+  return `/api/poi-image?token=${encodeURIComponent(token)}`;
+}
+
+function popupContent(poi: Poi) {
+  const content = document.createElement("article");
+  content.className = "poi-map-popup";
+  if (poi.images[0]) {
+    const image = document.createElement("img");
+    image.className = "poi-map-popup__image";
+    image.src = poiImageUrl(poi.images[0].token);
+    image.alt = "";
+    content.append(image);
+  }
+  const header = document.createElement("div");
+  header.className = "poi-map-popup__header";
+  const title = document.createElement("h2");
+  title.textContent = poi.name;
+  header.append(title);
+  const badges = document.createElement("div");
+  badges.className = "poi-map-popup__badges";
+  if (poi.type) {
+    const type = document.createElement("span");
+    type.className = "poi-map-popup__type";
+    type.textContent = poi.type;
+    badges.append(type);
+  }
+  if (poi.rating !== null) {
+    const rating = document.createElement("span");
+    rating.className = "poi-map-popup__rating";
+    rating.textContent = `★ ${poi.rating.toFixed(1)}`;
+    badges.append(rating);
+  }
+  header.append(badges);
+  content.append(header);
+  const meta = document.createElement("p");
+  meta.className = "poi-map-popup__meta";
+  meta.textContent =
+    [poi.province, poi.city, poi.district].filter(Boolean).join(" · ") ||
+    "地点信息待补充";
+  content.append(meta);
+  if (poi.review) {
+    const reviewLabel = document.createElement("p");
+    reviewLabel.className = "poi-map-popup__review-label";
+    reviewLabel.textContent = "推荐理由";
+    content.append(reviewLabel);
+    const review = document.createElement("p");
+    review.className = "poi-map-popup__review";
+    review.textContent = poi.review;
+    content.append(review);
+  }
+  if (poi.images.length) {
+    const footer = document.createElement("p");
+    footer.className = "poi-map-popup__footer";
+    footer.textContent = `已收录 ${poi.images.length} 张图片`;
+    content.append(footer);
+  }
+  return content;
+}
+
 export default function PoiMap({ pois, mapKey, selectedId, onSelect }: Props) {
   const element = useRef<HTMLDivElement>(null);
   const map = useRef<import("leaflet").Map | null>(null);
   const markers = useRef<import("leaflet").LayerGroup | null>(null);
+  const markerById = useRef<Map<string, import("leaflet").CircleMarker>>(
+    new Map(),
+  );
   const [mapReady, setMapReady] = useState(false);
   const [tileError, setTileError] = useState(false);
 
   useEffect(() => {
     if (!element.current || map.current || !mapKey) return;
+    const markerLookup = markerById.current;
     void import("leaflet").then((L) => {
       if (!element.current || map.current) return;
       map.current = L.map(element.current, { zoomControl: false }).setView(
@@ -44,6 +108,7 @@ export default function PoiMap({ pois, mapKey, selectedId, onSelect }: Props) {
       map.current?.remove();
       map.current = null;
       markers.current = null;
+      markerLookup.clear();
       setMapReady(false);
     };
   }, [mapKey]);
@@ -52,31 +117,57 @@ export default function PoiMap({ pois, mapKey, selectedId, onSelect }: Props) {
     if (!map.current || !markers.current) return;
     void import("leaflet").then((L) => {
       markers.current?.clearLayers();
+      markerById.current.clear();
       const bounds: [number, number][] = [];
       pois.forEach((poi) => {
         const point = gcj02ToWgs84(poi.longitude, poi.latitude);
         const latLng: [number, number] = [point.latitude, point.longitude];
         bounds.push(latLng);
-        L.circleMarker(latLng, {
-          color: poi.id === selectedId ? "#1c1917" : "#78716c",
-          fillColor: "#fafaf9",
+        const marker = L.circleMarker(latLng, {
+          color: "#155eef",
+          fillColor: "#ffffff",
           fillOpacity: 1,
-          radius: poi.id === selectedId ? 9 : 6,
+          radius: 6,
           weight: 2,
-        })
-          .bindTooltip(poi.name)
+        });
+        marker
+          .bindPopup(popupContent(poi), {
+            autoPanPadding: [36, 36],
+            closeButton: false,
+            offset: [0, -4],
+          })
           .on("click", () => onSelect(poi.id))
           .addTo(markers.current!);
+        markerById.current.set(poi.id, marker);
       });
       if (bounds.length === 1) map.current?.setView(bounds[0], 13);
       if (bounds.length > 1)
-        map.current?.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
+        map.current?.fitBounds(bounds, { padding: [28, 28], maxZoom: 13 });
     });
-  }, [mapReady, onSelect, pois, selectedId]);
+  }, [mapReady, onSelect, pois]);
+
+  useEffect(() => {
+    markerById.current.forEach((marker, id) => {
+      const active = id === selectedId;
+      marker.setStyle({
+        color: active ? "#101828" : "#155eef",
+        fillColor: active ? "#155eef" : "#ffffff",
+        radius: active ? 9 : 6,
+        weight: active ? 3 : 2,
+      });
+    });
+    const selectedMarker = selectedId
+      ? markerById.current.get(selectedId)
+      : undefined;
+    if (selectedMarker && map.current) {
+      map.current.panTo(selectedMarker.getLatLng(), { animate: true });
+      selectedMarker.openPopup();
+    }
+  }, [mapReady, pois, selectedId]);
 
   if (!mapKey) {
     return (
-      <div className="flex h-full min-h-96 items-center justify-center p-6 text-center text-sm text-stone-500">
+      <div className="flex h-full min-h-96 items-center justify-center p-4 text-center text-sm text-stone-500">
         配置天地图 Key 后在此显示交互地图。
       </div>
     );
