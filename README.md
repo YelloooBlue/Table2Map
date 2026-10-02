@@ -14,6 +14,22 @@ pnpm dev
 
 将飞书与天地图变量填入 `.env.local`；该文件已被 Git 忽略，不能提交。
 
+### 用手机在局域网调试
+
+Next.js 16 会保护开发期的脚本和接口。本项目允许 macOS 的 Bonjour `.local` 主机名访问开发资源，因此无需将会变化的局域网 IP 写入环境变量。
+
+用局域网监听模式启动：
+
+```bash
+pnpm dev:lan
+```
+
+通过本地主机名访问：`http://<本地主机名>.local:3000`。macOS 可用下列命令查看该名称；它不会随局域网 IP 变化。
+
+```bash
+scutil --get LocalHostName
+```
+
 ## 常用检查
 
 ```bash

@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [],
-  },
+  // Allows stable macOS Bonjour hostnames during LAN development.
+  allowedDevOrigins: ["*.local"],
 };
 
 export default nextConfig;
