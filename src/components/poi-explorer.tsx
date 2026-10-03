@@ -17,7 +17,7 @@ function uniqueOptions(values: Array<string | null>) {
 }
 
 function locationOf(poi: Poi) {
-  return [poi.city, poi.district].filter(Boolean).join(" · ") || "地点待补充";
+  return [poi.city, poi.district].filter(Boolean).join(" ") || "地点待补充";
 }
 
 function poiImageUrl(token: string) {
@@ -35,7 +35,7 @@ function PoiCard({
 }) {
   return (
     <article
-      className={`rounded-lg border p-2.5 transition ${selected ? "border-[#155eef] bg-[#eff4ff] shadow-[0_4px_12px_rgba(21,94,239,.10)]" : "border-transparent bg-white hover:border-[#d0d5dd] hover:shadow-sm"}`}
+      className={`rounded-lg border p-2 transition ${selected ? "border-[#155eef] bg-[#eff4ff] shadow-[0_4px_12px_rgba(21,94,239,.10)]" : "border-transparent bg-white hover:border-[#d0d5dd] hover:shadow-sm"}`}
     >
       <button className="block w-full text-left" onClick={onSelect}>
         <div className="flex items-start gap-2">
@@ -60,22 +60,22 @@ function PoiCard({
               <h2 className="line-clamp-1 min-w-0 font-semibold leading-5 tracking-[-0.01em] text-[#101828]">
                 {poi.name}
               </h2>
-              <div className="flex shrink-0 items-center gap-1.5 text-xs">
-                {poi.type && (
-                  <span className="rounded-full bg-[#eff4ff] px-1.5 py-0.5 font-semibold text-[#175cd3]">
-                    {poi.type}
-                  </span>
-                )}
-                {poi.rating !== null && (
-                  <span className="shrink-0 font-semibold text-[#b54708]">
-                    ★ {poi.rating.toFixed(1)}
-                  </span>
-                )}
-              </div>
+              {poi.rating !== null && (
+                <span className="shrink-0 text-xs font-semibold text-[#b54708]">
+                  ★ {poi.rating.toFixed(1)}
+                </span>
+              )}
             </div>
-            <p className="mt-1 line-clamp-1 text-xs text-[#667085]">
-              {locationOf(poi)}
-            </p>
+            <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+              {poi.type && (
+                <span className="shrink-0 rounded-full bg-[#eff4ff] px-1.5 py-px text-[11px] font-semibold text-[#175cd3]">
+                  {poi.type}
+                </span>
+              )}
+              <p className="line-clamp-1 text-xs text-[#667085]">
+                {locationOf(poi)}
+              </p>
+            </div>
             {poi.review && (
               <div className="mt-1.5 border-l-2 border-[#84adff] pl-1.5">
                 <p className="text-[11px] font-bold tracking-[.04em] text-[#175cd3]">

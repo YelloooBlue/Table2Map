@@ -54,12 +54,6 @@ function popupContent(
   header.append(title);
   const badges = document.createElement("div");
   badges.className = "poi-map-popup__badges";
-  if (poi.type) {
-    const type = document.createElement("span");
-    type.className = "poi-map-popup__type";
-    type.textContent = poi.type;
-    badges.append(type);
-  }
   if (poi.rating !== null) {
     const rating = document.createElement("span");
     rating.className = "poi-map-popup__rating";
@@ -68,12 +62,20 @@ function popupContent(
   }
   header.append(badges);
   content.append(header);
-  const meta = document.createElement("p");
-  meta.className = "poi-map-popup__meta";
-  meta.textContent =
-    [poi.province, poi.city, poi.district].filter(Boolean).join(" · ") ||
-    "地点信息待补充";
-  content.append(meta);
+  const details = document.createElement("div");
+  details.className = "poi-map-popup__details";
+  if (poi.type) {
+    const type = document.createElement("span");
+    type.className = "poi-map-popup__type";
+    type.textContent = poi.type;
+    details.append(type);
+  }
+  const location = document.createElement("span");
+  location.className = "poi-map-popup__meta";
+  location.textContent =
+    [poi.city, poi.district].filter(Boolean).join(" ") || "地点信息待补充";
+  details.append(location);
+  content.append(details);
   if (poi.review) {
     const reviewLabel = document.createElement("p");
     reviewLabel.className = "poi-map-popup__review-label";

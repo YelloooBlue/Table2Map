@@ -55,35 +55,6 @@ function text(value: unknown): string | null {
   return null;
 }
 
-function reviewText(value: unknown): string | null {
-  const direct = text(value);
-  if (direct) return direct;
-  if (!value || typeof value !== "object") return null;
-
-  const object = value as Record<string, unknown>;
-  const preferredKeys = [
-    "comment",
-    "content",
-    "description",
-    "title",
-    "summary",
-    "remark",
-  ];
-  for (const key of preferredKeys) {
-    const candidate = reviewText(object[key]);
-    if (candidate) return candidate;
-  }
-
-  for (const key of ["data", "object_value", "fields", "value"]) {
-    const nested = object[key];
-    if (nested && nested !== value) {
-      const candidate = reviewText(nested);
-      if (candidate) return candidate;
-    }
-  }
-  return null;
-}
-
 function images(value: unknown) {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
@@ -137,7 +108,7 @@ function toPoi(record: FeishuRecord): Poi | null {
     name: place.name,
     type: text(record.fields[poiFields.type]),
     rating: number(record.fields[poiFields.rating]),
-    review: reviewText(record.fields[poiFields.review]),
+    review: text(record.fields[poiFields.review]),
     province: place.province,
     city: place.city,
     district: place.district,
