@@ -189,15 +189,15 @@ export default function PoiMap({
 
   if (!mapKey) {
     return (
-      <div className="flex h-full min-h-96 items-center justify-center p-4 text-center text-sm text-stone-500">
+      <div className="flex h-full items-center justify-center p-4 text-center text-sm text-stone-500">
         配置天地图 Key 后在此显示交互地图。
       </div>
     );
   }
 
   return (
-    <div className="relative h-full min-h-96">
-      <div ref={element} className="h-full min-h-96" aria-label="POI 地图" />
+    <div className="relative h-full">
+      <div ref={element} className="h-full" aria-label="POI 地图" />
       {tileError && (
         <p className="absolute left-3 top-3 rounded bg-red-50 px-3 py-2 text-xs text-red-700 shadow">
           天地图瓦片加载失败，请检查 Key 的服务权限和域名白名单。
